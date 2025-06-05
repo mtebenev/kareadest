@@ -8,7 +8,7 @@ export const openaiProvider: TranslationProvider = {
   translate: async (text: string[], sourceLang: string, targetLang: string): Promise<string[]> => {
     if (!text.length) return [];
 
-    const apiKey = process.env['OPENAI_API_KEY'] || (typeof window !== 'undefined' ? (window as any).OPENAI_API_KEY : undefined);
+    const apiKey = process.env['NEXT_PUBLIC_OPENAI_API_KEY'];
     if (!apiKey) {
       throw new Error('OpenAI API key is not set.');
     }
@@ -45,12 +45,10 @@ export const openaiProvider: TranslationProvider = {
     text: string,
     sourceLang: string,
     targetLang: string,
-    token?: string | null,
-    useCache?: boolean,
   ): AsyncGenerator<string, void, unknown> {
     if (!text?.trim()) return;
 
-    const apiKey = process.env['OPENAI_API_KEY'] || (typeof window !== 'undefined' ? (window as any).OPENAI_API_KEY : undefined);
+    const apiKey = process.env['NEXT_PUBLIC_OPENAI_API_KEY'];
     if (!apiKey) {
       throw new Error('OpenAI API key is not set.');
     }
