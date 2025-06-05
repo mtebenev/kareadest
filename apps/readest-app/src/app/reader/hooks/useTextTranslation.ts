@@ -6,6 +6,7 @@ import { useTranslator } from '@/hooks/useTranslator';
 import { walkTextNodes } from '@/utils/walk';
 import { debounce } from '@/utils/debounce';
 import { getLocale } from '@/utils/misc';
+import { ITranslationTarget } from '@/components/translation/ITranslationTarget';
 
 export function useTextTranslation(bookKey: string, view: FoliateView | HTMLElement | null) {
   const { getViewSettings, getViewState, getProgress } = useReaderStore();
@@ -17,12 +18,12 @@ export function useTextTranslation(bookKey: string, view: FoliateView | HTMLElem
   const [provider, setProvider] = useState(viewSettings?.translationProvider);
   const [targetLang, setTargetLang] = useState(viewSettings?.translateTargetLang);
 
-  const { translate } = useTranslator({
+  const { translate, streamTranslate } = useTranslator({
     provider,
     targetLang: targetLang || getLocale(),
   } as UseTranslatorOptions);
 
-  const translateRef = useRef(translate);
+  const translateRef = useRef({ translate, streamTranslate });
   const observerRef = useRef<IntersectionObserver | null>(null);
   const translatedElements = useRef<HTMLElement[]>([]);
   const allTextNodes = useRef<HTMLElement[]>([]);
@@ -32,17 +33,17 @@ export function useTextTranslation(bookKey: string, view: FoliateView | HTMLElem
       const translationTargets = element.querySelectorAll('.translation-target');
       translationTargets.forEach((target) => {
         if (visible) {
-          target.classList.remove('hidden');
+          (target as unknown as ITranslationTarget).showTranslation();
         } else {
-          target.classList.add('hidden');
+          (target as unknown as ITranslationTarget).showOriginal();
         }
       });
     });
   };
 
   useEffect(() => {
-    translateRef.current = translate;
-  }, [translate]);
+    translateRef.current = { translate, streamTranslate };
+  }, [translate, streamTranslate]);
 
   const observeTextNodes = () => {
     if (!view || !enabled.current) return;
@@ -57,7 +58,7 @@ export function useTextTranslation(bookKey: string, view: FoliateView | HTMLElem
   const updateTranslation = () => {
     translatedElements.current.forEach((element) => {
       const translationTargets = element.querySelectorAll('.translation-target');
-      translationTargets.forEach((target) => target.remove());
+      translationTargets.forEach((target) => (target as unknown as ITranslationTarget).removeTranslationTarget(element));
     });
 
     translatedElements.current = [];
@@ -123,7 +124,7 @@ export function useTextTranslation(bookKey: string, view: FoliateView | HTMLElem
     const text = el.textContent?.replaceAll('\n', '').trim();
     if (!text) return;
 
-    if (el.querySelector('.translation-target')) {
+    if (el.classList.contains('translation-target') || el.querySelector('.translation-target')) {
       return;
     }
 
@@ -215,48 +216,55 @@ export function useTextTranslation(bookKey: string, view: FoliateView | HTMLElem
   useEffect(() => {
     if (!viewSettings) return;
 
-    const enabledChanged = enabled.current !== viewSettings.translationEnabled;
-    const providerChanged = provider !== viewSettings.translationProvider;
-    const targetLangChanged = targetLang !== viewSettings.translateTargetLang;
+    import('@/components/translation/TranslationTarget').then((mod) => {
+      mod.ensureRegistered();
 
-    if (enabledChanged) {
-      enabled.current = viewSettings.translationEnabled;
-    }
+      const enabledChanged = enabled.current !== viewSettings.translationEnabled;
+      const providerChanged = provider !== viewSettings.translationProvider;
+      const targetLangChanged = targetLang !== viewSettings.translateTargetLang;
 
-    if (providerChanged) {
-      setProvider(viewSettings.translationProvider);
-    }
-
-    if (targetLangChanged) {
-      setTargetLang(viewSettings.translateTargetLang);
-    }
-
-    if (enabledChanged) {
-      toggleTranslationVisibility(viewSettings.translationEnabled);
-      if (enabled.current) {
-        observeTextNodes();
+      if (enabledChanged) {
+        enabled.current = viewSettings.translationEnabled;
       }
-    } else if (providerChanged || targetLangChanged) {
-      updateTranslation();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+      if (providerChanged) {
+        setProvider(viewSettings.translationProvider);
+      }
+
+      if (targetLangChanged) {
+        setTargetLang(viewSettings.translateTargetLang);
+      }
+
+      if (enabledChanged) {
+        toggleTranslationVisibility(viewSettings.translationEnabled);
+        if (enabled.current) {
+          observeTextNodes();
+        }
+      } else if (providerChanged || targetLangChanged) {
+        updateTranslation();
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    });
   }, [bookKey, viewSettings, provider, targetLang]);
 
   useEffect(() => {
-    if (!view || !enabled.current) return;
+    import('@/components/translation/TranslationTarget').then((mod) => {
+      mod.ensureRegistered();
+      if (!view || !enabled.current) return;
 
-    if ('renderer' in view) {
-      view.addEventListener('load', observeTextNodes);
-    } else {
-      observeTextNodes();
-    }
-    return () => {
       if ('renderer' in view) {
-        view.removeEventListener('load', observeTextNodes);
+        view.addEventListener('load', observeTextNodes);
+      } else {
+        observeTextNodes();
       }
-      observerRef.current?.disconnect();
-      translatedElements.current = [];
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      return () => {
+        if ('renderer' in view) {
+          view.removeEventListener('load', observeTextNodes);
+        }
+        observerRef.current?.disconnect();
+        translatedElements.current = [];
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    });
   }, [view]);
 }

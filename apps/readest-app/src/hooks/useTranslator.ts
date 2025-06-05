@@ -152,8 +152,90 @@ export function useTranslator({
     [selectedProvider, sourceLang, targetLang, translator, token],
   );
 
+  const streamTranslate = useCallback(
+    async function* (
+      input: string[],
+      options?: { source?: string; target?: string; useCache?: boolean },
+    ): AsyncGenerator<string, void, unknown> {
+      const sourceLanguage = options?.source || sourceLang;
+      const targetLanguage = options?.target || targetLang;
+      const useCache = options?.useCache ?? false;
+      const textsToTranslate = input;
+
+      // Only support single string streaming for now
+      if (textsToTranslate.length !== 1 || !textsToTranslate[0]?.trim()) {
+        return;
+      }
+
+      const text = textsToTranslate[0];
+
+      // Try cache first
+      const cachedTranslation = await getFromCache(
+        text,
+        sourceLanguage,
+        targetLanguage,
+        provider,
+      );
+      if (cachedTranslation) {
+        yield cachedTranslation;
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const translator = translators.find((t) => t.name === provider);
+        let result = ''; // store accumulated result for caching
+        if (!translator) {
+          throw new Error(`No translator found for provider: ${provider}`);
+        }
+
+        if (typeof translator.streamTranslate !== 'function') {
+          // Fallback to non-streaming translation
+          const translated = await translator.translate(
+            [text], sourceLanguage, targetLanguage, token, useCache,
+          );
+          result = translated[0] || '';
+          yield result;
+        }
+        else {
+          for await (const chunk of translator.streamTranslate(
+            text,
+            sourceLanguage,
+            targetLanguage,
+            token,
+            useCache,
+          )) {
+            result += chunk;
+            yield chunk;
+          }
+        }
+
+        // Store the final result in cache
+        if (result) {
+          await storeInCache(
+            text,
+            result,
+            sourceLanguage,
+            targetLanguage,
+            provider,
+          );
+        }
+
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+        console.error('Streaming translation error:', err);
+        throw err instanceof Error ? err : new Error(String(err));
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [provider, sourceLang, targetLang, translator, token],
+  );
+
   return {
     translate,
+    streamTranslate,
     translator,
     translators,
     loading,

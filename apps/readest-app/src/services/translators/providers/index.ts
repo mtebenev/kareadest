@@ -2,6 +2,7 @@ import { TranslationProvider } from '../types';
 import { deeplProvider } from './deepl';
 import { azureProvider } from './azure';
 import { googleProvider } from './google';
+import { openaiProvider } from './openai';
 
 function createTranslator<T extends string>(
   name: T,
@@ -18,11 +19,13 @@ function createTranslator<T extends string>(
 const deeplTranslator = createTranslator('deepl', deeplProvider);
 const azureTranslator = createTranslator('azure', azureProvider);
 const googleTranslator = createTranslator('google', googleProvider);
+const openaiTranslator = createTranslator('openai', openaiProvider);
 
 const availableTranslators = [
   deeplTranslator,
   azureTranslator,
   googleTranslator,
+  openaiTranslator,
   // Add more translators here
 ];
 

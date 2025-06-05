@@ -12,6 +12,13 @@ export interface TranslationProvider {
     token?: string | null,
     useCache?: boolean,
   ) => Promise<string[]>;
+  streamTranslate?: (
+    text: string,
+    sourceLang: string,
+    targetLang: string,
+    token?: string | null,
+    useCache?: boolean,
+  ) => AsyncGenerator<string, void, unknown>;
 }
 
 export interface TranslationCache {
