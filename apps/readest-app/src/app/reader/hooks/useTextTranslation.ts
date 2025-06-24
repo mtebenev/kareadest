@@ -128,34 +128,14 @@ export function useTextTranslation(bookKey: string, view: FoliateView | HTMLElem
       return;
     }
 
-    try {
-      const translated = await translateRef.current([text]);
-      const translatedText = translated[0];
-      if (!translatedText || text === translatedText) return;
+    const childrenNodes = Array.from(el.childNodes);
+    el.replaceChildren();
+    const translationTarget = document.createElement('translation-target') as unknown as ITranslationTarget & HTMLElement;
+    translationTarget.initialize(childrenNodes, translateRef.current.streamTranslate);
+    translationTarget.classList.add('translation-target');
 
-      const wrapper = document.createElement('font');
-      wrapper.className = `translation-target ${!enabled.current ? 'hidden' : ''}`;
-      wrapper.setAttribute('translation-element-mark', '1');
-      wrapper.setAttribute('lang', targetLang || getLocale());
-
-      const blockWrapper = document.createElement('font');
-      blockWrapper.className = 'translation-target translation-block-wrapper';
-
-      const inner = document.createElement('font');
-      inner.className = 'translation-target target-inner target-inner-theme-none';
-      inner.textContent = translatedText;
-
-      blockWrapper.appendChild(inner);
-      wrapper.appendChild(blockWrapper);
-
-      if (el.querySelector('.translation-target')) {
-        return;
-      }
-      el.appendChild(wrapper);
-      translatedElements.current.push(el);
-    } catch (err) {
-      console.warn('Translation failed:', err);
-    }
+    el.appendChild(translationTarget);
+    translatedElements.current.push(el);
   };
 
   const findNodeIndicesInRange = (range: Range, nodes: HTMLElement[]) => {
