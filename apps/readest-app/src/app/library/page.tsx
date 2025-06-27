@@ -46,6 +46,7 @@ import Spinner from '@/components/Spinner';
 import LibraryHeader from './components/LibraryHeader';
 import Bookshelf from './components/Bookshelf';
 import BookDetailModal from '@/components/BookDetailModal';
+import KavitaImportModal from '@/components/KavitaImportModal';
 import useShortcuts from '@/hooks/useShortcuts';
 import DropIndicator from '@/components/DropIndicator';
 
@@ -78,6 +79,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
   const [isSelectAll, setIsSelectAll] = useState(false);
   const [isSelectNone, setIsSelectNone] = useState(false);
   const [showDetailsBook, setShowDetailsBook] = useState<Book | null>(null);
+  const [showImportKavita, setShowImportKavita] = useState(false);
   const [booksTransferProgress, setBooksTransferProgress] = useState<{
     [key: string]: number | null;
   }>({});
@@ -538,6 +540,12 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
     importBooks(files);
   };
 
+  const handleImportBooksKavita = async () => {
+    setShowImportKavita(true);
+    console.log('Importing books from Kavita...');
+  };
+
+
   const handleSetSelectMode = (selectMode: boolean) => {
     if (selectMode && appService?.hasHaptics) {
       impactFeedback('medium');
@@ -589,6 +597,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           isSelectMode={isSelectMode}
           isSelectAll={isSelectAll}
           onImportBooks={handleImportBooks}
+          onImportBooksKavita={handleImportBooksKavita}
           onToggleSelectMode={() => handleSetSelectMode(!isSelectMode)}
           onSelectAll={handleSelectAll}
           onDeselectAll={handleDeselectAll}
@@ -655,6 +664,12 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
           handleBookUpload={handleBookUpload}
           handleBookDownload={handleBookDownload}
           handleBookDelete={handleBookDelete}
+        />
+      )}
+      {showImportKavita && (
+        <KavitaImportModal
+          isOpen={!!showImportKavita}
+          onClose={() => setShowImportKavita(false)}
         />
       )}
       <AboutWindow />

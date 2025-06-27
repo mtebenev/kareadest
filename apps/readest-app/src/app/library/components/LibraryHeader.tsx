@@ -28,6 +28,7 @@ interface LibraryHeaderProps {
   isSelectMode: boolean;
   isSelectAll: boolean;
   onImportBooks: () => void;
+  onImportBooksKavita: () => void;
   onToggleSelectMode: () => void;
   onSelectAll: () => void;
   onDeselectAll: () => void;
@@ -37,6 +38,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({
   isSelectMode,
   isSelectAll,
   onImportBooks,
+  onImportBooksKavita,
   onToggleSelectMode,
   onSelectAll,
   onDeselectAll,
@@ -183,7 +185,7 @@ const LibraryHeader: React.FC<LibraryHeaderProps> = ({
                 </div>
               }
             >
-              <ImportMenu onImportBooks={onImportBooks} />
+              <ImportMenu onImportBooks={onImportBooks} onImportBooksKavita={onImportBooksKavita} />
             </Dropdown>
             {appService?.isMobile ? null : (
               <button
