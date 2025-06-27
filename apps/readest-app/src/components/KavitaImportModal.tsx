@@ -31,7 +31,36 @@ const KavitaImportModal = ({
 
   const handleDelete = () => {
     setShowDeleteAlert(true);
+    };
+
+  const handleGetBooks = async () => {
+    console.log('MTEX Starting Kavita import...');
+
+    const proxyBaseEndpoint = '/api/kavita-proxy';
+    const apiKey = '<API_KEY>';
+
+    const loginEndpoint = `${proxyBaseEndpoint}/api/Plugin/authenticate?apiKey=${apiKey}&pluginName=kareadest`;
+    const loginResponse = await fetch(loginEndpoint, {
+      method: 'POST',
+      headers: {
+      'Content-Type': 'application/json',
+      },
+    });
+
+    const jwtToken = (await loginResponse.json()).token;
+    console.log('MTEX got JWT Token:', jwtToken);
+
+    const librariesEndpoint = `${proxyBaseEndpoint}/api/Library/libraries`;
+    const librariesResponse = await fetch(librariesEndpoint, {
+      headers: {
+        'Authorization': `Bearer ${jwtToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    const librariesData = await librariesResponse.json();
+    console.log('MTEX libraries data:', librariesData);
   };
+
 
 
   return (
@@ -47,7 +76,9 @@ const KavitaImportModal = ({
         <div className='flex w-full select-text items-center justify-center'>
           <div className='relative w-full rounded-lg'>
             <div className='mb-6 me-4 flex h-32 items-start'>
-                KAVITAKAVITA
+              <button onClick={handleGetBooks}>
+                GET BOOKS
+              </button>
             </div>
 
             <div className='text-base-content my-4'>
