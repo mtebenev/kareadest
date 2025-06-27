@@ -369,5 +369,10 @@
   "Enter CSS for reader interface styling...": "Voer CSS in voor de opmaak van de leesinterface...",
   "Crop": "Bijsnijden",
   "Book Covers": "Boekomslagen",
-  "Fit": "Passend maken"
+  "Fit": "Passend maken",
+  "Reset {{settings}}": "Reset {{settings}}",
+  "Reset Settings": "Instellingen resetten",
+  "{{count}} pages left in chapter_one": "Nog {{count}} pagina in hoofdstuk",
+  "{{count}} pages left in chapter_other": "Nog {{count}} pagina’s in hoofdstuk",
+  "Show Remaining Pages": "Toon resterende pagina’s"
 }

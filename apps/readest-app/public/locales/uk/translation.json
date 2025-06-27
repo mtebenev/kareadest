@@ -375,5 +375,12 @@
   "Enter CSS for reader interface styling...": "Введіть CSS для стилізації інтерфейсу рідера...",
   "Crop": "Обрізати",
   "Book Covers": "Обкладинки книг",
-  "Fit": "Вписати"
+  "Fit": "Вписати",
+  "Reset {{settings}}": "Скинути {{settings}}",
+  "Reset Settings": "Скинути налаштування",
+  "{{count}} pages left in chapter_one": "Залишилася {{count}} сторінка у розділі",
+  "{{count}} pages left in chapter_few": "Залишилось {{count}} сторінки у розділі",
+  "{{count}} pages left in chapter_many": "Залишилось {{count}} сторінок у розділі",
+  "{{count}} pages left in chapter_other": "Залишилось {{count}} сторінок у розділі",
+  "Show Remaining Pages": "Показати залишок сторінок"
 }

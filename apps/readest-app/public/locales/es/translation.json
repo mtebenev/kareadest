@@ -372,5 +372,11 @@
   "Enter CSS for reader interface styling...": "Introduce CSS para la interfaz de lectura...",
   "Crop": "Recortar",
   "Book Covers": "Portadas de libros",
-  "Fit": "Encajar"
+  "Fit": "Encajar",
+  "Reset {{settings}}": "Restablecer {{settings}}",
+  "Reset Settings": "Restablecer configuración",
+  "{{count}} pages left in chapter_one": "{{count}} página restante en el capítulo",
+  "{{count}} pages left in chapter_many": "{{count}} páginas restantes en el capítulo",
+  "{{count}} pages left in chapter_other": "{{count}} páginas restantes en el capítulo",
+  "Show Remaining Pages": "Mostrar resto"
 }
