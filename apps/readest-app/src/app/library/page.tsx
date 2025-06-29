@@ -670,6 +670,7 @@ const LibraryPageContent = ({ searchParams }: { searchParams: ReadonlyURLSearchP
         <KavitaImportModal
           isOpen={!!showImportKavita}
           onClose={() => setShowImportKavita(false)}
+          doImport={importBooks}
         />
       )}
       <AboutWindow />

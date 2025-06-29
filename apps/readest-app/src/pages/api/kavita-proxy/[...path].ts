@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { Readable } from 'stream';
 
 // Configure your Kavita backend URL here (or via env var)
 const KAVITA_BASE_URL = process.env['KAVITA_BASE_URL'] || 'http://192.168.0.10:5200';
@@ -36,16 +37,39 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Forward status
     res.status(fetchResponse.status);
 
+    // Copy relevant headers
+    const skipHeaders = [
+      'transfer-encoding', // Node.js handles this automatically
+      'content-encoding', // Avoid issues with compressed responses
+      'server', // Avoid exposing backend server details
+      'date', // Avoid issues with date headers
+      'content-length', // Node.js will handle this automatically
+    ];
+    fetchResponse.headers.forEach((value, key) => {
+      // You may want to filter out certain headers if needed
+      const lowerKey = key.toLowerCase();
+      if (skipHeaders.includes(lowerKey)) return;
+      console.log(`Forwarding header: ${key} = ${value}`);
+      res.setHeader(key, value);
+    });    
+
     // Stream backend response body
     const contentType = fetchResponse.headers.get('content-type') || '';
 
-    if (contentType.includes('application/json')) {
-        const data = await fetchResponse.json();
-        res.json(data);
+    if (fetchResponse.body) {
+      // Node.js 18+ supports Readable.fromWeb
+      if (typeof (Readable as any).fromWeb === 'function') {
+        const nodeStream = (Readable as any).fromWeb(fetchResponse.body);
+        nodeStream.pipe(res);
+      } else {
+        // Fallback: buffer and send
+        const buffer = Buffer.from(await fetchResponse.arrayBuffer());
+        res.end(buffer);
+      }
     } else {
-        const text = await fetchResponse.text();
-        res.send(text);
+      res.end();
     }
+    
     console.log("Kavita proxy finished processing");
   } catch (error) {
     console.error('Kavita proxy error:', error);

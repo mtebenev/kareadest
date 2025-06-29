@@ -9,6 +9,7 @@ import Dialog from './Dialog';
 interface KavitaImportModalProps {
   isOpen: boolean;
   onClose: () => void;
+  doImport: () => void;
   handleBookDownload?: (book: Book) => void;
   handleBookUpload?: (book: Book) => void;
   handleBookDelete?: (book: Book) => void;
@@ -17,6 +18,7 @@ interface KavitaImportModalProps {
 const KavitaImportModal = ({
   isOpen,
   onClose,
+  doImport
 }: KavitaImportModalProps) => {
   const _ = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -24,6 +26,7 @@ const KavitaImportModal = ({
   const [fileSize, setFileSize] = useState<number | null>(null);
   const { envConfig } = useEnv();
   const { settings } = useSettingsStore();
+  const [books, setBooks] = useState<string[]>(['Book 1', 'Book 2', 'Book 3']);
 
   const handleClose = () => {
     onClose();
@@ -50,6 +53,7 @@ const KavitaImportModal = ({
     const jwtToken = (await loginResponse.json()).token;
     console.log('MTEX got JWT Token:', jwtToken);
 
+    // Fetch libraries
     const librariesEndpoint = `${proxyBaseEndpoint}/api/Library/libraries`;
     const librariesResponse = await fetch(librariesEndpoint, {
       headers: {
@@ -59,9 +63,52 @@ const KavitaImportModal = ({
     });
     const librariesData = await librariesResponse.json();
     console.log('MTEX libraries data:', librariesData);
+
+    // Fetch books
+    const seriesEndpoint = `${proxyBaseEndpoint}/api/Series/all-v2`;
+    const seriesResponse = await fetch(seriesEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${jwtToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        "statements": [
+        ],
+        "combination": 1,
+        "sortOptions": {
+          "sortField": 1,
+          "isAscending": true
+        },
+        "limitTo": 0
+      }),
+    });
+    const seriesData = await seriesResponse.json();
+    console.log('MTEX series data:', seriesData);
+
+    // Download book
+    const downloadEndpoint = `${proxyBaseEndpoint}/api/Download/series?seriesId=197`;
+    const downloadResponse = await fetch(downloadEndpoint, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${jwtToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    const downloadData = await downloadResponse.blob();
+    console.log('MTEX download data:', downloadData.size);
+
+    const fileName = 'downloaded_book.zip'; // You can set this dynamically if needed
+    const file = new File([downloadData], fileName, { type: downloadData.type });
+
+
+    doImport([file]);
   };
 
-
+  const handleBookSelect = (book: string) => {
+    console.log('Selected book:', book);
+    // You can call a prop handler here if needed
+  };
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center'>
@@ -84,10 +131,17 @@ const KavitaImportModal = ({
             <div className='text-base-content my-4'>
               <div className='mb-4 grid grid-cols-2 gap-4 sm:grid-cols-3'>
                 <div className='overflow-hidden'>
-                  <span className='font-bold'>{_('Publisher:')}</span>
-                  <p className='text-neutral-content text-sm'>
-                    KAVITAKAVITA
-                  </p>
+                  <ul className="list-disc pl-5">
+                    {books.map((book) => (
+                      <li
+                        key={book}
+                        className="cursor-pointer hover:bg-base-200 rounded px-2 py-1"
+                        onClick={() => handleBookSelect(book)}
+                      >
+                        {book}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             </div>
